@@ -25,12 +25,7 @@ exports.updateContactInfoSchema = exports.createAssessmentSchema; // Same valida
 exports.updateEconomicProfileSchema = z.object({
   body: z.object({
     economicProfile: z.object({
-      responses: z.record(
-        z.object({
-          notApplicable: z.boolean(),
-          values: z.record(z.string().optional()).optional(),
-        })
-      ),
+      responses: z.record(z.any()),
     }).refine((data) => {
       // Validate logic: 8 questions, 5 years
       const questionIds = Object.keys(data.responses);

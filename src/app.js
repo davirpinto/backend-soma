@@ -15,7 +15,7 @@ app.use(morgan('dev'));
 app.use((req, res, next) => {
     if (req.body?.economicProfile?.responses) {
         const responses = req.body.economicProfile.responses;
-        
+
         // Se responses é uma string, fazer parse
         if (typeof responses === 'string') {
             try {
@@ -24,25 +24,37 @@ app.use((req, res, next) => {
                 console.error('Failed to parse economicProfile.responses:', e);
             }
         }
-        
-        // Garantir que todas as keys sejam strings
+
+        // Garantir que todas as keys sejam strings e os valores sejam objetos
         const normalizedResponses = {};
         Object.keys(req.body.economicProfile.responses).forEach(key => {
             const stringKey = String(key);
-            const value = req.body.economicProfile.responses[key];
-            
-            // Se o valor for uma string, tentar fazer parse
+            let value = req.body.economicProfile.responses[key];
+
+            // Se o valor for uma string que parece JSON, tentar fazer parse
             if (typeof value === 'string') {
                 try {
-                    normalizedResponses[stringKey] = JSON.parse(value);
+                    const parsed = JSON.parse(value);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        value = parsed;
+                    }
                 } catch (e) {
-                    normalizedResponses[stringKey] = value;
+                    // Se falhar o parse, mantém como string original
                 }
-            } else {
+            }
+
+            // Se o valor for um objeto com a estrutura correta, mantém
+            if (typeof value === 'object' && value !== null && 'notApplicable' in value) {
                 normalizedResponses[stringKey] = value;
+            } else {
+                // Caso contrário (string, número ou objeto sem estrutura), normaliza para o formato padrão
+                normalizedResponses[stringKey] = {
+                    notApplicable: false,
+                    values: typeof value === 'object' && value !== null ? value : { "current": String(value) }
+                };
             }
         });
-        
+
         req.body.economicProfile.responses = normalizedResponses;
     }
     next();
