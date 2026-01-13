@@ -11,6 +11,43 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Middleware para corrigir economicProfile se vier com keys numéricas ou stringificado
+app.use((req, res, next) => {
+    if (req.body?.economicProfile?.responses) {
+        const responses = req.body.economicProfile.responses;
+        
+        // Se responses é uma string, fazer parse
+        if (typeof responses === 'string') {
+            try {
+                req.body.economicProfile.responses = JSON.parse(responses);
+            } catch (e) {
+                console.error('Failed to parse economicProfile.responses:', e);
+            }
+        }
+        
+        // Garantir que todas as keys sejam strings
+        const normalizedResponses = {};
+        Object.keys(req.body.economicProfile.responses).forEach(key => {
+            const stringKey = String(key);
+            const value = req.body.economicProfile.responses[key];
+            
+            // Se o valor for uma string, tentar fazer parse
+            if (typeof value === 'string') {
+                try {
+                    normalizedResponses[stringKey] = JSON.parse(value);
+                } catch (e) {
+                    normalizedResponses[stringKey] = value;
+                }
+            } else {
+                normalizedResponses[stringKey] = value;
+            }
+        });
+        
+        req.body.economicProfile.responses = normalizedResponses;
+    }
+    next();
+});
+
 const authRoutes = require('./routes/authRoutes');
 const assessmentRoutes = require('./routes/assessmentRoutes');
 
