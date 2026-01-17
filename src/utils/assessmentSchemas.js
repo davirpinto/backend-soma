@@ -25,7 +25,7 @@ exports.updateContactInfoSchema = exports.createAssessmentSchema; // Same valida
 exports.updateEconomicProfileSchema = z.object({
   body: z.object({
     economicProfile: z.object({
-      responses: z.record(z.any()),
+      responses: z.record(z.string(), z.any()),
     }).refine((data) => {
       // Validate logic: 8 questions, 5 years
       const questionIds = Object.keys(data.responses);
@@ -38,7 +38,7 @@ exports.updateEconomicProfileSchema = z.object({
 
 exports.updateMaturityAnswersSchema = z.object({
   body: z.object({
-    maturityAnswers: z.record(z.number().min(0).max(5))
+    maturityAnswers: z.record(z.string(), z.number().min(0).max(5))
       .refine((data) => Object.keys(data).length === 45, {
         message: "Must answer all 45 maturity questions",
       }),
